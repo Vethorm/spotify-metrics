@@ -1,0 +1,63 @@
+version: '3'
+services:
+  frontend:
+    build: frontend
+    command: gunicorn -b 0.0.0.0:8050 -w 4 --chdir src 'src.app:server'
+    ports:
+      - 9990:8050
+    env_file:
+      - .env
+    environment:
+      PYTHONUNBUFFERED: 1
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASS: ${MONGO_USER}
+      MONGO_HOST: mongo
+    networks:
+      - reverse-proxy
+      - database
+    labels:
+      - "traefik.enable=${TRAEFIK_ENABLE}"
+      - "traefik.http.routers.spotifymetrics.rule=Host(`spotifymetrics.${DOMAIN}`)"
+      - "traefik.http.routers.spotifymetrics.entrypoints=websecure"
+      - "traefik.http.routers.spotifymetrics.tls.certresolver=myresolver"
+
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_USER}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+    networks:
+      - database
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8481:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_USER}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_USER}@mongo:27017/
+    networks:
+      - database
+
+  scraper:
+    build: spotify-scraper
+    command: scraper-refresh-data
+    env_file:
+      - .env
+    environment:
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASS: ${MONGO_USER}
+      MONGO_HOST: mongo
+    networks:
+      - database
+
+networks:
+  reverse-proxy:
+    external: true
+  database:

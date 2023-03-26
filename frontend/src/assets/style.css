@@ -1,0 +1,142 @@
+body {
+    font-family: "Lato", sans-serif;
+    margin: 0;
+    background-color: #F7F7F7;
+}
+
+.header {
+    background-color: #222222;
+    height: 256px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.header-emoji {
+    font-size: 48px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.header-title {
+    color: #FFFFFF;
+    font-size: 48px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.header-description {
+    color: #CFCFCF;
+    margin: 4px auto;
+    text-align: center;
+    max-width: 384px;
+}
+
+.header-disclaimer {
+    color: #CFCFCF;
+    margin: 4px auto;
+    text-align: center;
+    max-width: 500px;
+}
+
+.content-header {
+    color: #161515;
+    margin: 4px auto;
+    text-align: center;
+    max-width: 384px;
+}
+
+.wrapper {
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 1024px;
+    padding-right: 10px;
+    padding-left: 10px;
+    margin-top: 32px;
+}
+
+.card {
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
+}
+
+#recently-listened {
+    height: 500px;
+    word-break: normal;
+}
+
+#top-artists {
+    margin-right: 12px;
+}
+
+#top-genres {
+    margin-left: 12px;
+}
+
+.pies {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    width: 100%;
+    height: 200px;
+    overflow: auto;
+}
+
+.col-12 {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    width: 100%;
+    overflow: auto;
+}
+
+.col-11 {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    width: 90%;
+    overflow: auto;
+}
+
+.col-8 {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    width: 66.67%;
+    overflow: auto;
+}
+
+.col-6 {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    width: 50%;
+    overflow: auto;
+}
+
+.col-5 {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    width: 48%;
+    overflow: auto;
+}
+
+.col-4 {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    width: 33.33%;
+}
+
+.row {
+    --bs-gutter-x: 1.625rem;
+    --bs-gutter-y: 0;
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: calc(-1*var(--bs-gutter-y));
+    margin-left: calc(-0.5*var(--bs-gutter-x));
+    margin-right: calc(-0.5*var(--bs-gutter-x));
+    justify-content: center;
+}
