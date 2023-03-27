@@ -61,6 +61,21 @@ body {
     box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
 }
 
+.card-header {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 0;
+    background-color: rgb(0, 0, 0, 0);
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+.card-body {
+    -webkit-box-flex: 1;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    padding: 1.25rem;
+    overflow: auto;
+}
+
 #recently-listened {
     height: 500px;
     word-break: normal;
@@ -88,7 +103,6 @@ body {
     flex-shrink: 0;
     flex-basis: auto;
     width: 100%;
-    overflow: auto;
 }
 
 .col-11 {
@@ -96,7 +110,6 @@ body {
     flex-shrink: 0;
     flex-basis: auto;
     width: 90%;
-    overflow: auto;
 }
 
 .col-8 {
@@ -104,7 +117,6 @@ body {
     flex-shrink: 0;
     flex-basis: auto;
     width: 66.67%;
-    overflow: auto;
 }
 
 .col-6 {
@@ -112,7 +124,6 @@ body {
     flex-shrink: 0;
     flex-basis: auto;
     width: 50%;
-    overflow: auto;
 }
 
 .col-5 {
@@ -120,7 +131,6 @@ body {
     flex-shrink: 0;
     flex-basis: auto;
     width: 48%;
-    overflow: auto;
 }
 
 .col-4 {

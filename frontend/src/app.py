@@ -35,10 +35,10 @@ server.wsgi_app = ProxyFix(server.wsgi_app)
 
 def create_dash_table(dataframe: pd.DataFrame) -> dash_table.DataTable:
     """Create dash tables for our frontend
-    
+
     Args:
         dataframe (DataFrame): the dataframe we are transforming into a table
-    
+
     Returns:
         DataTable: a dash DataTable
     """
@@ -63,12 +63,12 @@ def create_dash_table(dataframe: pd.DataFrame) -> dash_table.DataTable:
 
 def create_pie(title: str, labels: List[str], values: List[int]):
     """Creates a pie graph for our frontend
-    
+
     Args:
         title (str): the title of the graph
         labels (List[str]): the labels for the graph
         values (List[str]): the values for the graph
-    
+
     Returns
         Pie: a dash Pie graph
     """
@@ -214,7 +214,7 @@ def update_pies(data: List[str]):
 def update_history_length(value: int) -> int:
     """Updates the history length value stored on the frontend when the
         time-slider changes
-    
+
     Args:
         value (int): the current history length in days
 
@@ -229,7 +229,7 @@ def update_history_length(value: int) -> int:
 def update_view_window(value: int) -> str:
     """Updates the text about history length on the frontend when the
         time-slider changes
-    
+
     Args:
         value (int): the current history length in days
 
@@ -286,7 +286,13 @@ app.layout = html.Div(
                 html.Div(
                     children=[
                         html.Div(
-                            id="recently-listened",
+                            children=[
+                                html.P("Recently played tracks !", className='card-header'),
+                                html.Div(
+                                    id="recently-listened",
+                                    className='card-body'
+                                ),
+                            ],
                             className="col-12 card",
                         ),
                     ],
@@ -304,11 +310,23 @@ app.layout = html.Div(
                 html.Div(
                     children=[
                         html.Div(
-                            id="top-artists",
+                            children=[
+                                html.P("Top Artists !", className='card-header'),
+                                html.Div(
+                                    id="top-artists",
+                                    className='card-body'
+                                ),
+                            ],
                             className="col-5 card",
                         ),
                         html.Div(
-                            id="top-genres",
+                            children=[
+                                html.P("Top Genres !", className='card-header'),
+                                html.Div(
+                                    id="top-genres",
+                                    className='card-body'
+                                ),
+                            ],
                             className="col-5 card",
                         ),
                     ],
