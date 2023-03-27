@@ -23,7 +23,7 @@ collection_track_energy = database["track_energy"]
 
 def get_last_played_at() -> int:
     """Get the timestamp of the last played song
-    
+
     Returns:
         int: last played timestamp in millisecond epoch
     """
@@ -31,9 +31,11 @@ def get_last_played_at() -> int:
     for played in result:
         last_played_at = played["played_at"]
         print(last_played_at, type(last_played_at))
-    millisecond_epoch = int(last_played_at.timestamp() * 1000)
-    print("Last played:", millisecond_epoch)
-    return millisecond_epoch
+        millisecond_epoch = int(last_played_at.timestamp() * 1000)
+        print("Last played:", millisecond_epoch)
+        return millisecond_epoch
+    # probably should think of a more elegant solution to an empty database
+    return 0
 
 
 def upsert_play_history(history: PlayHistoryPaging) -> None:
@@ -96,7 +98,7 @@ def upsert_track_energy(tracks: List[TrackEnergy]) -> None:
 
 def refresh_data() -> None:
     """Run the script to scrape data from the spotify API for recently played
-        history metrics
+    history metrics
     """
     print("Beginning scrape worker")
     from . import scrape
