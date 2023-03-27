@@ -17,6 +17,7 @@ credentials = tk.Credentials(client_id, client_secret)
 
 def refresh(func):
     """decorator to refresh a token before doing an API call"""
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         refresh_token()
@@ -108,7 +109,7 @@ def get_audio_features(client: Spotify, track_ids: List[str]) -> List[AudioFeatu
     Args:
         client (Spotify): the spotify client to use
         track_ids List[str]: list of track ids to get audio features for
-        
+
     Returns:
         List[AudioFeatures]: list of audio features
     """
