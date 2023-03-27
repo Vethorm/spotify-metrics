@@ -21,7 +21,7 @@ def read_recently_played(after: datetime) -> DataFrame:
     Args:
         after (datetime): datetime in UTC to find the lower bound of dates to
             check
-    
+
     Returns:
         DataFrame
     """
@@ -46,7 +46,7 @@ def read_track_ids(after: datetime) -> List[str]:
     Args:
         after (datetime): datetime in UTC to find the lower bound of dates to
             check
-    
+
     Returns:
         DataFrame
     """
@@ -124,7 +124,7 @@ def read_top_artists(track_ids: List[str]) -> DataFrame:
 
 def read_top_genres(track_ids: List[str]) -> DataFrame:
     """Reads the aggregate top genres from the track list from mongodb
-    
+
     Args:
         track_ids (List[str]): track ids to aggregate
 
