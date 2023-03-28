@@ -17,4 +17,4 @@ include = ["spotify_scraper"]
 [project.scripts]
 get-new-spotify-token = "spotify_scraper.scrape:get_new_token"
 refresh-spotify-token = "spotify_scraper.scrape:refresh_token"
-scraper-refresh-data = "spotify_scraper.database_operations:refresh_data"
+scraper-refresh-data = "spotify_scraper.scrape:refresh_data"
