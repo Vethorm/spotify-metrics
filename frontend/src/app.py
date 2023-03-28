@@ -1,16 +1,15 @@
 # noqa: D100
-from dash import Dash, html, dcc, dash_table
-from dash.dependencies import Output, Input
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import pandas as pd
+import os
 from datetime import datetime, timedelta
-
-from werkzeug.middleware.proxy_fix import ProxyFix
-
 from typing import List
 
-import mongo_read
+import database
+import pandas as pd
+import plotly.graph_objects as go
+from dash import Dash, dash_table, dcc, html
+from dash.dependencies import Input, Output
+from plotly.subplots import make_subplots
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 external_stylesheets = [
     {
@@ -31,6 +30,12 @@ app = Dash(__name__, external_stylesheets=external_stylesheets)
 
 server = app.server
 server.wsgi_app = ProxyFix(server.wsgi_app)
+
+mongo_user = os.environ["MONGO_USER"]
+mongo_pass = os.environ["MONGO_PASS"]
+mongo_host = os.environ["MONGO_HOST"]
+
+spotify_db = database.SpotifyMetricsDB(mongo_user, mongo_pass, mongo_host)
 
 
 def create_dash_table(dataframe: pd.DataFrame) -> dash_table.DataTable:
@@ -107,7 +112,7 @@ def update_recently_played(interval_count: int, history_length: int):
     current_time = datetime.utcnow()
     time_delta = timedelta(days=history_length)
     after_time = current_time - time_delta
-    recently_played = mongo_read.read_recently_played(after=after_time)
+    recently_played = spotify_db.read_recently_played(after=after_time)
     return [create_dash_table(recently_played)]
 
 
@@ -131,7 +136,7 @@ def update_track_list(interval_count: int, history_length: int) -> List[str]:
     current_time = datetime.utcnow()
     time_delta = timedelta(days=history_length)
     after_time = current_time - time_delta
-    track_ids = mongo_read.read_track_ids(after=after_time)
+    track_ids = spotify_db.read_track_ids(after=after_time)
     return track_ids
 
 
@@ -149,7 +154,7 @@ def update_top_artists(data: List[str]):
     Returns:
         List[dash objects]: a single dash table
     """
-    top_artists = mongo_read.read_top_artists(data)
+    top_artists = spotify_db.read_top_artists(data)
     return [create_dash_table(top_artists)]
 
 
@@ -167,7 +172,7 @@ def update_top_genres(data: List[str]):
     Returns:
         List[dash objects]: a single dash table
     """
-    top_genres = mongo_read.read_top_genres(data)
+    top_genres = spotify_db.read_top_genres(data)
     return [create_dash_table(top_genres)]
 
 
@@ -185,8 +190,8 @@ def update_pies(data: List[str]):
     Returns:
         List[dash objects]: a single dash table
     """
-    energy_score = mongo_read.read_energy_score(data)
-    popularity_score = mongo_read.read_popularity(data)
+    energy_score = spotify_db.read_energy_score(data)
+    popularity_score = spotify_db.read_popularity(data)
     fig = make_subplots(rows=1, cols=2, specs=[[{"type": "pie"}, {"type": "pie"}]])
     fig.add_trace(
         create_pie(
@@ -287,11 +292,10 @@ app.layout = html.Div(
                     children=[
                         html.Div(
                             children=[
-                                html.P("Recently played tracks !", className='card-header'),
-                                html.Div(
-                                    id="recently-listened",
-                                    className='card-body'
+                                html.P(
+                                    "Recently played tracks !", className="card-header"
                                 ),
+                                html.Div(id="recently-listened", className="card-body"),
                             ],
                             className="col-12 card",
                         ),
@@ -311,21 +315,15 @@ app.layout = html.Div(
                     children=[
                         html.Div(
                             children=[
-                                html.P("Top Artists !", className='card-header'),
-                                html.Div(
-                                    id="top-artists",
-                                    className='card-body'
-                                ),
+                                html.P("Top Artists !", className="card-header"),
+                                html.Div(id="top-artists", className="card-body"),
                             ],
                             className="col-5 card",
                         ),
                         html.Div(
                             children=[
-                                html.P("Top Genres !", className='card-header'),
-                                html.Div(
-                                    id="top-genres",
-                                    className='card-body'
-                                ),
+                                html.P("Top Genres !", className="card-header"),
+                                html.Div(id="top-genres", className="card-body"),
                             ],
                             className="col-5 card",
                         ),
