@@ -314,6 +314,7 @@ app.layout = html.Div(
                 html.Div(
                     children=[
                         html.Div(
+                            id="top-artists-card",
                             children=[
                                 html.P("Top Artists !", className="card-header"),
                                 html.Div(id="top-artists", className="card-body"),
@@ -321,6 +322,7 @@ app.layout = html.Div(
                             className="col-5 card",
                         ),
                         html.Div(
+                            id="top-genres-card",
                             children=[
                                 html.P("Top Genres !", className="card-header"),
                                 html.Div(id="top-genres", className="card-body"),
