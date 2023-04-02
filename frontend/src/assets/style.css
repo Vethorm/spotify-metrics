@@ -81,11 +81,11 @@ body {
     word-break: normal;
 }
 
-#top-artists {
+#top-artists-card {
     margin-right: 12px;
 }
 
-#top-genres {
+#top-genres-card {
     margin-left: 12px;
 }
 
