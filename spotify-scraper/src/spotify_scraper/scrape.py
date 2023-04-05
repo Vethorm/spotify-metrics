@@ -8,6 +8,7 @@ from tekore import RefreshingCredentials
 from tekore.model import AudioFeatures, FullArtist, PlayHistoryPaging
 
 from .database import SpotifyMetricsDB
+from .logger import logger
 from .scraper_dataclasses import ArtistGenres, TrackEnergy
 
 
@@ -148,7 +149,7 @@ def refresh_token(client_id, client_secret) -> str:
     Returns:
         Spotify: the new spotify client
     """
-    print("Refreshing user token")
+    logger.info("Refreshing user token")
     refresh_token = os.environ["SPOTIFY_REFRESH_TOKEN"]
     refreshing_credentials = RefreshingCredentials(client_id, client_secret)
     refreshing_token = refreshing_credentials.refresh_user_token(refresh_token)
@@ -159,7 +160,7 @@ def refresh_data() -> None:
     """Run the script to scrape data from the spotify API for recently played
     history metrics
     """
-    print("Beginning scrape worker")
+    logger.info("Beginning scrape worker")
     conf = tk.config_from_environment(True)
     username = os.environ["MONGO_USER"]
     password = os.environ["MONGO_PASS"]
@@ -170,22 +171,21 @@ def refresh_data() -> None:
 
     spotify_scraper.client.token = refresh_token(client_id, client_secret)
 
-    minutes = 10
+    minutes = 1
 
     while True:
         last_played = metrics_db.get_last_played_at()
         history = spotify_scraper.get_recently_played(after=last_played)
         if len(history.items) == 0:
-            print(f"Processing history: len={len(history.items)}")
+            logger.info(f"Processing history: len={len(history.items)}")
         else:
-            print(
+            logger.info(
                 (
                     f"Processing history: len={len(history.items)},",
                     f"after={history.cursors.after},",
                     f"before={history.cursors.before}",
-                ),
+                )
             )
-            print(len(history.items))
             metrics_db.upsert_play_history(history)
 
             artist_ids = spotify_scraper.extract_artist_ids_from_history(history)
@@ -198,5 +198,5 @@ def refresh_data() -> None:
             track_energies = spotify_scraper.extract_track_energies(audio_features)
             metrics_db.upsert_track_energy(track_energies)
 
-        print(f"Sleeping for {60 * minutes}")
+        logger.info(f"Sleeping for {60 * minutes}")
         time.sleep(60 * minutes)

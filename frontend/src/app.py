@@ -1,15 +1,17 @@
 # noqa: D100
+import logging
 import os
 from datetime import datetime, timedelta
 from typing import List
 
-import database
 import pandas as pd
 import plotly.graph_objects as go
 from dash import Dash, dash_table, dcc, html
 from dash.dependencies import Input, Output
 from plotly.subplots import make_subplots
 from werkzeug.middleware.proxy_fix import ProxyFix
+
+from . import database
 
 external_stylesheets = [
     {
@@ -27,6 +29,16 @@ external_stylesheets = [
 ]
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
+
+# implemented from here
+# https://trstringer.com/logging-flask-gunicorn-the-manageable-way/
+if __name__ != "__main__":
+    gunicorn_logger = logging.getLogger("gunicorn.error")
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
+
+logger = app.logger
+
 
 server = app.server
 server.wsgi_app = ProxyFix(server.wsgi_app)
@@ -106,13 +118,15 @@ def update_recently_played(interval_count: int, history_length: int):
     Returns:
         List[dash objects]: a single dash table
     """
-    print(
-        f"Triggering update interval {interval_count}, history-length =", history_length
+    logger.info(
+        f"Triggering update interval {interval_count}, "
+        f"history-length = {history_length} for recently played"
     )
     current_time = datetime.utcnow()
     time_delta = timedelta(days=history_length)
     after_time = current_time - time_delta
     recently_played = spotify_db.read_recently_played(after=after_time)
+    logger.info(f"Loading {len(recently_played)} recently played tracks")
     return [create_dash_table(recently_played)]
 
 
@@ -130,13 +144,15 @@ def update_track_list(interval_count: int, history_length: int) -> List[str]:
     Returns:
         List[str]: the list of track ids for the current history length
     """
-    print(
-        f"Triggering update interval {interval_count}, history-length =", history_length
+    logger.info(
+        f"Triggering update interval {interval_count}, "
+        f"history-length = {history_length} for track ids"
     )
     current_time = datetime.utcnow()
     time_delta = timedelta(days=history_length)
     after_time = current_time - time_delta
     track_ids = spotify_db.read_track_ids(after=after_time)
+    logger.info(f"Updating track ids with {len(track_ids)} id(s)")
     return track_ids
 
 
@@ -190,6 +206,7 @@ def update_pies(data: List[str]):
     Returns:
         List[dash objects]: a single dash table
     """
+    logger.info(f"Updating pies with {len(data)} tracks")
     energy_score = spotify_db.read_energy_score(data)
     popularity_score = spotify_db.read_popularity(data)
     fig = make_subplots(rows=1, cols=2, specs=[[{"type": "pie"}, {"type": "pie"}]])
@@ -226,7 +243,7 @@ def update_history_length(value: int) -> int:
     Returns:
         int: the history length in days to store
     """
-    print("Updating history-length to", value)
+    logger.info(f"Updating history-length to {value}")
     return value
 
 
@@ -241,7 +258,7 @@ def update_view_window(value: int) -> str:
     Returns:
         str: the text about history length in days
     """
-    print("Updating history-length to", value)
+    logger.info(f"Updating history-length to {value}")
     return f"Viewing the last {value} day(s)!"
 
 
