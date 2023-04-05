@@ -4,6 +4,7 @@ from typing import List
 from pymongo import DESCENDING, MongoClient, ReplaceOne
 from tekore.model import PlayHistoryPaging
 
+from .logger import logger
 from .scraper_dataclasses import Artist, ArtistGenres, RecentlyPlayedMetric, TrackEnergy
 
 
@@ -27,7 +28,7 @@ class SpotifyMetricsDB:
         for played in result:
             last_played_at = played["played_at"]
             millisecond_epoch = int(last_played_at.timestamp() * 1000)
-            print("Last played:", millisecond_epoch)
+            logger.info(f"Last played: {millisecond_epoch}")
             return millisecond_epoch
         # probably should think of a more elegant solution to an empty database
         return 0

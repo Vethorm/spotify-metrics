@@ -1,9 +1,11 @@
-import os
+import logging
 from datetime import datetime
 from typing import List
 
 from pandas import DataFrame
 from pymongo import DESCENDING, MongoClient
+
+logger = logging.getLogger("dash.dash")
 
 
 class SpotifyMetricsDB:
@@ -23,7 +25,7 @@ class SpotifyMetricsDB:
         Returns:
             DataFrame
         """
-        print("Reading recently played since", after)
+        logger.info(f"Reading recently played since {after}")
         result = self.collection_play_history.find(
             filter={"played_at": {"$gte": after}}
         ).sort([("played_at", DESCENDING)])
@@ -47,7 +49,7 @@ class SpotifyMetricsDB:
         Returns:
             DataFrame
         """
-        print("Reading track ids after", after)
+        logger.info(f"Reading track ids after {after}")
         result = self.collection_play_history.find(
             filter={"played_at": {"$gte": after}}
         )
@@ -82,7 +84,7 @@ class SpotifyMetricsDB:
         Returns:
             float: aggregate popularity score
         """
-        print(f"Aggregating popularity with {len(track_ids)} track ids!")
+        logger.info(f"Aggregating popularity with {len(track_ids)} track ids!")
         result = self.collection_play_history.aggregate(
             pipeline=[
                 {"$match": {"track_id": {"$in": track_ids}}},
