@@ -18,6 +18,7 @@ services:
       - database
     labels:
       - "traefik.enable=${TRAEFIK_ENABLE}"
+      - "traefik.docker.network=reverse-proxy"
       - "traefik.http.routers.spotifymetrics.rule=Host(`spotifymetrics.${DOMAIN}`)"
       - "traefik.http.routers.spotifymetrics.entrypoints=websecure"
       - "traefik.http.routers.spotifymetrics.tls.certresolver=myresolver"
