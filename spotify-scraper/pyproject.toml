@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools", "build"]
+requires = ["setuptools>=58.0.4", "build"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,12 +7,13 @@ name = "spotify_scraper"
 version = "0.0.1"
 dependencies = [
     "tekore",
-    "pymongo"
+    "sqlmodel",
+    "psycopg2-binary"
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["spotify_scraper"]
+include = ["spotify_scraper*"]
 
 [project.scripts]
 get-new-spotify-token = "spotify_scraper.scrape:get_new_token"

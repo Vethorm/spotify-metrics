@@ -2,4 +2,5 @@ dash
 pandas
 gunicorn
 tekore
-pymongo
+sqlmodel
+psycopg2-binary

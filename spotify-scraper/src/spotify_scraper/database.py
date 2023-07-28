@@ -1,20 +1,21 @@
-from dataclasses import asdict
-from typing import List
-
-from pymongo import DESCENDING, MongoClient, ReplaceOne
+from spotify_scraper.models.track import PlayedTrack, Track, TrackFeatures
+from spotify_scraper.models.artist import Artist
+from sqlmodel import SQLModel, create_engine, Session, select, col
 from tekore.model import PlayHistoryPaging
 
-from .logger import logger
-from .scraper_dataclasses import Artist, ArtistGenres, RecentlyPlayedMetric, TrackEnergy
-
+from typing import List
+import os
 
 class SpotifyMetricsDB:
-    def __init__(self, username: str, password: str, host: str):
-        self.client = MongoClient(f"mongodb://{username}:{password}@{host}:27017/")
-        self.database = self.client["spotify_metrics"]
-        self.collection_play_history = self.database["play_history"]
-        self.collection_artist_genres = self.database["artist_genres"]
-        self.collection_track_energy = self.database["track_energy"]
+    def __init__(self, database_uri: str = None):
+        if database_uri is None:
+            database_uri = os.environ["SPOTIFY_SCRAPER_DATABASE_URI"]
+        self.engine = create_engine(database_uri)
+        self._create_db_and_tables()
+
+    def _create_db_and_tables(self):
+        """lets sqlmodel create our database and tables"""
+        SQLModel.metadata.create_all(self.engine)
 
     def get_last_played_at(self) -> int:
         """Get the timestamp of the last played song
@@ -22,68 +23,54 @@ class SpotifyMetricsDB:
         Returns:
             int: last played timestamp in millisecond epoch
         """
-        result = (
-            self.collection_play_history.find().sort("played_at", DESCENDING).limit(1)
-        )
-        for played in result:
-            last_played_at = played["played_at"]
-            millisecond_epoch = int(last_played_at.timestamp() * 1000)
-            logger.info(f"Last played: {millisecond_epoch}")
-            return millisecond_epoch
-        # probably should think of a more elegant solution to an empty database
-        return 0
+        with Session(self.engine) as session:
+            statement = (
+                select(PlayedTrack).order_by(col(PlayedTrack.played_at).desc()).limit(1)
+            )
+            result = session.exec(statement)
+            for played in result:
+                millisecond_epoch = int(played.played_at.timestamp() * 1000)
+                # logger.info(f"Last played: {millisecond_epoch}")
+                return millisecond_epoch
 
     def upsert_play_history(self, history: PlayHistoryPaging) -> None:
         """Upsert the play history to mongodb
         Args:
             history (PlayHistoryPaging): history object of recently played songs
         """
-        metrics: List[RecentlyPlayedMetric] = []
-        for track in history.items:
-            artists = [Artist(artist.id, artist.name) for artist in track.track.artists]
-            metrics.append(
-                RecentlyPlayedMetric(
-                    track.played_at,
-                    track.track.name,
-                    track.track.id,
-                    artists,
-                    track.track.popularity,
+        with Session(self.engine) as session:
+            for track in history.items:
+                artists = [artist.id for artist in track.track.artists]
+                # TODO: check how this handles insert conflicts
+                # ideally we are doing upserts
+                session.merge(
+                    PlayedTrack(
+                        played_at=track.played_at,
+                        track_id=track.track.id,
+                        track_name=track.track.name,
+                        artist_ids=artists,
+                    )
                 )
-            )
-        requests = []
-        for metric in metrics:
-            replace = ReplaceOne(
-                filter={"played_at": metric.played_at},
-                replacement=asdict(metric),
-                upsert=True,
-            )
-            requests.append(replace)
-        self.collection_play_history.bulk_write(requests=requests)
+            session.commit()
 
-    def upsert_artist_genres(self, artists: List[ArtistGenres]) -> None:
-        """Upsert the artist genres to mongodb
+    # TODO: REMOVE
+    ArtistGenres = None
+    TrackEnergy = None
 
-        Args:
-            artists (List[ArtistGenres]): list of artist genre objects to upsert
-        """
-        requests = []
-        for artist in artists:
-            replace = ReplaceOne(
-                filter={"artist_id": artist.id}, replacement=asdict(artist), upsert=True
-            )
-            requests.append(replace)
-        self.collection_artist_genres.bulk_write(requests)
+    def upsert_track(self, tracks: List[Track]) -> None:
+        with Session(self.engine) as session:
+            for track in tracks:
+                session.merge(track)
+            session.commit()
 
-    def upsert_track_energy(self, tracks: List[TrackEnergy]) -> None:
-        """Upsert the track energies to mongodb
+    def upsert_track_features(self, track_features: List[TrackFeatures]) -> None:
+        with Session(self.engine) as session:
+            for track in track_features:
+                session.merge(track)
+            session.commit()
 
-        Args:
-            tracks (List[TrackEnergy]): list of track energy objects to upsert
-        """
-        requests = []
-        for track in tracks:
-            replace = ReplaceOne(
-                filter={"track_id": track.id}, replacement=asdict(track), upsert=True
-            )
-            requests.append(replace)
-        self.collection_track_energy.bulk_write(requests)
+    def upsert_artist(self, artists: List[Artist]) -> None:
+        with Session(self.engine) as session:
+            for artist in artists:
+                session.merge(artist)
+            session.commit()
