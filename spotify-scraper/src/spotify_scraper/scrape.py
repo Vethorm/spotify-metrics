@@ -7,9 +7,10 @@ import tekore as tk
 from tekore import RefreshingCredentials
 from tekore.model import AudioFeatures, FullArtist, PlayHistoryPaging
 
-from .database import SpotifyMetricsDB
+from spotify_scraper.database import SpotifyMetricsDB
+from spotify_scraper.models.track import Track, TrackFeatures
+from spotify_scraper.models.artist import Artist
 from .logger import logger
-from .scraper_dataclasses import ArtistGenres, TrackEnergy
 
 
 class SpotifyScraper:
@@ -52,6 +53,18 @@ class SpotifyScraper:
             history = self.client.playback_recently_played(limit=limit)
         return history
 
+    def extract_tracks(self, history: PlayHistoryPaging) -> List[Track]:
+        tracks = []
+        for track in history.items:
+            tracks.append(
+                Track(
+                    track_id=track.track.id,
+                    artist_ids=[artist.id for artist in track.track.artists],
+                    popularity=track.track.popularity,
+                )
+            )
+        return tracks
+
     def extract_artist_ids_from_history(self, history: PlayHistoryPaging) -> List[str]:
         """Extract the artist ids from the listen history
 
@@ -90,7 +103,7 @@ class SpotifyScraper:
         artists = self.client.artists(artist_ids)
         return artists
 
-    def extract_artist_genres(self, artists: List[FullArtist]) -> List[ArtistGenres]:
+    def extract_artists(self, artists: List[FullArtist]) -> List[Artist]:
         """Extract the artist genres from a list of artists
 
         Args:
@@ -99,7 +112,15 @@ class SpotifyScraper:
         Returns:
             List[ArtistGenres]: list of ArtistGenres objects
         """
-        return [ArtistGenres(artist.id, artist.genres) for artist in artists]
+        return [
+            Artist(
+                artist_id=artist.id,
+                artist_name=artist.name,
+                genres=artist.genres,
+                popularity=artist.popularity,
+            )
+            for artist in artists
+        ]
 
     def get_audio_features(self, track_ids: List[str]) -> List[AudioFeatures]:
         """Gets the audio features for a list of track ids from the Spotify API
@@ -112,7 +133,9 @@ class SpotifyScraper:
         audio_features = self.client.tracks_audio_features(track_ids)
         return audio_features
 
-    def extract_track_energies(self, tracks: List[AudioFeatures]) -> List[TrackEnergy]:
+    def extract_track_features(
+        self, tracks: List[AudioFeatures]
+    ) -> List[TrackFeatures]:
         """Extract the energy of the provided tracks
 
         Args:
@@ -121,7 +144,26 @@ class SpotifyScraper:
         Returns:
             List[TrackEnergy]: list of track energy objects
         """
-        return [TrackEnergy(track.id, track.energy) for track in tracks]
+        return [
+            TrackFeatures(
+                track_id=track.id,
+                acousticness=track.acousticness,
+                danceability=track.danceability,
+                duration_ms=track.duration_ms,
+                energy=track.energy,
+                instrumentalness=track.instrumentalness,
+                key=track.key,
+                liveness=track.liveness,
+                loudness=track.loudness,
+                mode=track.mode,
+                speechiness=track.speechiness,
+                tempo=track.tempo,
+                time_signature=track.time_signature,
+                type=track.type,
+                valence=track.valence,
+            )
+            for track in tracks
+        ]
 
 
 def get_new_token(client_id, client_secret, redirect_uri) -> None:
@@ -162,10 +204,10 @@ def refresh_data() -> None:
     """
     logger.info("Beginning scrape worker")
     conf = tk.config_from_environment(True)
-    username = os.environ["MONGO_USER"]
-    password = os.environ["MONGO_PASS"]
-    host = os.environ["MONGO_HOST"]
-    metrics_db = SpotifyMetricsDB(username, password, host)
+    # username = os.environ["MONGO_USER"]
+    # password = os.environ["MONGO_PASS"]
+    # host = os.environ["MONGO_HOST"]
+    metrics_db = SpotifyMetricsDB()
     client_id, client_secret, redirect_uri, user_refresh = conf
     spotify_scraper = SpotifyScraper(*conf)
 
@@ -188,15 +230,21 @@ def refresh_data() -> None:
             )
             metrics_db.upsert_play_history(history)
 
-            artist_ids = spotify_scraper.extract_artist_ids_from_history(history)
-            artists = spotify_scraper.get_artists(artist_ids)
-            artist_genres = spotify_scraper.extract_artist_genres(artists)
-            metrics_db.upsert_artist_genres(artist_genres)
+            tracks: List[Track]
+            tracks = spotify_scraper.extract_tracks(history)
+            metrics_db.upsert_track(tracks)
 
+            track_features: List[TrackFeatures]
             track_ids = spotify_scraper.extract_track_ids_from_history(history)
             audio_features = spotify_scraper.get_audio_features(track_ids)
-            track_energies = spotify_scraper.extract_track_energies(audio_features)
-            metrics_db.upsert_track_energy(track_energies)
+            track_features = spotify_scraper.extract_track_features(audio_features)
+            metrics_db.upsert_track_features(track_features)
+
+            artists: List[Artist]
+            artist_ids = spotify_scraper.extract_artist_ids_from_history(history)
+            artists = spotify_scraper.get_artists(artist_ids)
+            artists = spotify_scraper.extract_artists(artists)
+            metrics_db.upsert_artist(artists)
 
         logger.info(f"Sleeping for {60 * minutes}")
         time.sleep(60 * minutes)

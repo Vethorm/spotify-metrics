@@ -1,5 +1,5 @@
 version: '3'
-name: ${DEPLOY_ENVIRONMENT}
+name: ${DEPLOY_ENVIRONMENT:-dev}
 services:
   frontend:
     build: frontend
@@ -10,38 +10,35 @@ services:
       - .env
     environment:
       PYTHONUNBUFFERED: 1
-      MONGO_USER: ${MONGO_USER}
-      MONGO_PASS: ${MONGO_USER}
-      MONGO_HOST: mongo
+      SPOTIFY_SCRAPER_DATABASE_URI: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin}@postgres/${POSTGRES_DB:-metrics}
     networks:
-      - reverse-proxy
+      - homelab_traefik-reverse-proxy
       - database
     labels:
       - "traefik.enable=${TRAEFIK_ENABLE}"
-      - "traefik.docker.network=reverse-proxy"
+      - "traefik.docker.network=homelab_traefik-reverse-proxy"
       - "traefik.http.routers.spotifymetrics.rule=Host(`spotifymetrics.${DOMAIN}`)"
       - "traefik.http.routers.spotifymetrics.entrypoints=websecure"
       - "traefik.http.routers.spotifymetrics.tls.certresolver=myresolver"
 
-  mongo:
-    image: mongo
-    restart: always
+  postgres:
+    image: postgres
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_USER}
-      MONGO_INITDB_DATABASE: ${MONGO_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
+      POSTGRES_DB: ${POSTGRES_DB:-metrics}
     networks:
       - database
 
-  mongo-express:
-    image: mongo-express
-    restart: always
-    ports:
-      - ${MONGO_EXPRESS_PORT:-8481}:8081
+  pgadmin:
+    image: dpage/pgadmin4
     environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USER}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_USER}
-      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USER}:${MONGO_USER}@mongo:27017/
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-password}
+    ports:
+      - 18500:80
+    depends_on:
+      - postgres
     networks:
       - database
 
@@ -52,15 +49,13 @@ services:
       - .env
     environment:
       PYTHONUNBUFFERED: 1
-      MONGO_USER: ${MONGO_USER}
-      MONGO_PASS: ${MONGO_USER}
-      MONGO_HOST: mongo
+      SPOTIFY_SCRAPER_DATABASE_URI: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin}@postgres/${POSTGRES_DB:-metrics}
+    depends_on:
+      - postgres
     networks:
       - database
-    depends_on:
-      - mongo
 
 networks:
-  reverse-proxy:
+  homelab_traefik-reverse-proxy:
     external: true
   database:

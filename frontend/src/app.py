@@ -43,11 +43,7 @@ logger = app.logger
 server = app.server
 server.wsgi_app = ProxyFix(server.wsgi_app)
 
-mongo_user = os.environ["MONGO_USER"]
-mongo_pass = os.environ["MONGO_PASS"]
-mongo_host = os.environ["MONGO_HOST"]
-
-spotify_db = database.SpotifyMetricsDB(mongo_user, mongo_pass, mongo_host)
+spotify_db = database.SpotifyMetricsDB()
 
 
 def create_dash_table(dataframe: pd.DataFrame) -> dash_table.DataTable:
@@ -158,9 +154,9 @@ def update_track_list(interval_count: int, history_length: int) -> List[str]:
 
 @app.callback(
     Output("top-artists", "children"),
-    [Input("track-ids", "data")],
+    [Input("interval-component", "n_intervals"), Input("history-length", "data")],
 )
-def update_top_artists(data: List[str]):
+def update_top_artists(interval_count: int, history_length: int):
     """Updates the top-artists table on the frontend. The table will be
         updated when either Input object is modified.
 
@@ -170,15 +166,18 @@ def update_top_artists(data: List[str]):
     Returns:
         List[dash objects]: a single dash table
     """
-    top_artists = spotify_db.read_top_artists(data)
+    current_time = datetime.utcnow()
+    time_delta = timedelta(days=history_length)
+    after_time = current_time - time_delta
+    top_artists = spotify_db.read_top_artists(after_time)
     return [create_dash_table(top_artists)]
 
 
 @app.callback(
     Output("top-genres", "children"),
-    [Input("track-ids", "data")],
+    [Input("interval-component", "n_intervals"), Input("history-length", "data")],
 )
-def update_top_genres(data: List[str]):
+def update_top_genres(interval_count: int, history_length: int):
     """Updates the top-genres table on the frontend. The table will be
         updated when either Input object is modified.
 
@@ -188,15 +187,18 @@ def update_top_genres(data: List[str]):
     Returns:
         List[dash objects]: a single dash table
     """
-    top_genres = spotify_db.read_top_genres(data)
+    current_time = datetime.utcnow()
+    time_delta = timedelta(days=history_length)
+    after_time = current_time - time_delta
+    top_genres = spotify_db.read_top_genres(after_time)
     return [create_dash_table(top_genres)]
 
 
 @app.callback(
     Output("pie-charts", "children"),
-    [Input("track-ids", "data")],
+    [Input("interval-component", "n_intervals"), Input("history-length", "data")],
 )
-def update_pies(data: List[str]):
+def update_pies(interval_count: int, history_length: int):
     """Updates the energy and popularity pies on the frontend. The table will
         be updated when either Input object is modified.
 
@@ -206,9 +208,11 @@ def update_pies(data: List[str]):
     Returns:
         List[dash objects]: a single dash table
     """
-    logger.info(f"Updating pies with {len(data)} tracks")
-    energy_score = spotify_db.read_energy_score(data)
-    popularity_score = spotify_db.read_popularity(data)
+    current_time = datetime.utcnow()
+    time_delta = timedelta(days=history_length)
+    after_time = current_time - time_delta
+    energy_score = spotify_db.read_energy_score(after_time)
+    popularity_score = spotify_db.read_popularity(after_time)
     fig = make_subplots(rows=1, cols=2, specs=[[{"type": "pie"}, {"type": "pie"}]])
     fig.add_trace(
         create_pie(
