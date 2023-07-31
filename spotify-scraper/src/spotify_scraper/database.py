@@ -34,7 +34,8 @@ class SpotifyMetricsDB:
                 return millisecond_epoch
 
     def upsert_play_history(self, history: PlayHistoryPaging) -> None:
-        """Upsert the play history to mongodb
+        """Upsert the play history to transactional db
+
         Args:
             history (PlayHistoryPaging): history object of recently played songs
         """
@@ -53,17 +54,23 @@ class SpotifyMetricsDB:
                 )
             session.commit()
 
-    # TODO: REMOVE
-    ArtistGenres = None
-    TrackEnergy = None
-
     def upsert_track(self, tracks: List[Track]) -> None:
+        """upserts a track to the transactional db
+
+        Args:
+            tracks (List[Track]): list of tracks to upsert
+        """
         with Session(self.engine) as session:
             for track in tracks:
                 session.merge(track)
             session.commit()
 
     def upsert_track_features(self, track_features: List[TrackFeatures]) -> None:
+        """upsert track features to the transactional db
+
+        Args:
+            track_features (List[TrackFeatures]): list of track features
+        """
         with Session(self.engine) as session:
             for track in track_features:
                 session.merge(track)

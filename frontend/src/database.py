@@ -23,7 +23,8 @@ class SpotifyMetricsDB:
         self.engine = create_engine(database_uri)
 
     def read_recently_played(self, after: datetime) -> DataFrame:
-        """Reads the recently played songs from mongodb
+        """Reads the recently played songs from the transactional db
+
         Args:
             after (datetime): datetime in UTC to find the lower bound of dates to
                 check
@@ -63,13 +64,14 @@ class SpotifyMetricsDB:
 
 
     def read_track_ids(self, after: datetime) -> List[str]:
-        """Reads the track ids for recently played songs from mongodb
+        """Reads the track ids for recently played songs from the transactional db
+
         Args:
             after (datetime): datetime in UTC to find the lower bound of dates to
                 check
 
         Returns:
-            DataFrame
+            List[str]
         """
         with Session(self.engine) as session:
             statement = f"""
@@ -84,10 +86,11 @@ class SpotifyMetricsDB:
 
 
     def read_energy_score(self, after: datetime) -> float:
-        """Reads the aggregate energy score from the track list from mongodb
+        """Reads the aggregate energy score from the track list from the transactional db
 
         Args:
-            track_ids (List[str]): track ids to aggregate
+            after (datetime): datetime in UTC to find the lower bound of dates to
+                check
 
         Returns:
             float: aggregate energy score
@@ -115,7 +118,8 @@ class SpotifyMetricsDB:
         """Reads the aggregate popularity score from the track list from mongodb
 
         Args:
-            track_ids (List[str]): track ids to aggregate
+            after (datetime): datetime in UTC to find the lower bound of dates to
+                check
 
         Returns:
             float: aggregate popularity score
@@ -143,7 +147,8 @@ class SpotifyMetricsDB:
         """Reads the aggregate top artists from the track list from mongodb
 
         Args:
-            track_ids (List[str]): track ids to aggregate
+            after (datetime): datetime in UTC to find the lower bound of dates to
+                check
 
         Return:
             DataFrame
@@ -174,7 +179,8 @@ class SpotifyMetricsDB:
         """Reads the aggregate top genres from the track list from mongodb
 
         Args:
-            track_ids (List[str]): track ids to aggregate
+            after (datetime): datetime in UTC to find the lower bound of dates to
+                check
 
         Return:
             DataFrame
