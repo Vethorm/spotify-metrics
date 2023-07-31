@@ -42,7 +42,7 @@ class SpotifyMetricsDB:
                 GROUP BY track.track_id
             )
 
-            SELECT track.played_at, track.track_id, artists.artist_names
+            SELECT track.played_at, track.track_name, artists.artist_names
             FROM
                 (SELECT * FROM playedtrack WHERE played_at >= '{after.strftime('%Y-%m-%d')}') track
                 INNER JOIN track_and_artist artists
