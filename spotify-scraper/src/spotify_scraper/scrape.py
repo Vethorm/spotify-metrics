@@ -54,6 +54,14 @@ class SpotifyScraper:
         return history
 
     def extract_tracks(self, history: PlayHistoryPaging) -> List[Track]:
+        """Extracs the tracks from the play history
+
+        Args:
+            history (PlayHistoryPaging): play history from the spotify api
+
+        Returns:
+            List[Track]: list of tracks
+        """
         tracks = []
         for track in history.items:
             tracks.append(
@@ -104,13 +112,13 @@ class SpotifyScraper:
         return artists
 
     def extract_artists(self, artists: List[FullArtist]) -> List[Artist]:
-        """Extract the artist genres from a list of artists
+        """Extract the artists from a list of artists
 
         Args:
             artists (List[FullArtist]): list of artists we use to extract genres
 
         Returns:
-            List[ArtistGenres]: list of ArtistGenres objects
+            List[Artist]: list of Artist objects
         """
         return [
             Artist(
@@ -124,6 +132,7 @@ class SpotifyScraper:
 
     def get_audio_features(self, track_ids: List[str]) -> List[AudioFeatures]:
         """Gets the audio features for a list of track ids from the Spotify API
+
         Args:
             track_ids List[str]: list of track ids to get audio features for
 
