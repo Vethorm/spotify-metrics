@@ -55,7 +55,7 @@ class SpotifyMetricsDB:
                 [
                     item[0].strftime("%Y-%m-%d, %H:%M"),
                     item[1],
-                    ", ".join([artist["name"] for artist in item[2]]),
+                    item[2],
                 ]
                 for item in result
             ]
@@ -164,10 +164,12 @@ class SpotifyMetricsDB:
             )
 
             SELECT artist.artist_name
-            FROM artist
-                INNER JOIN artist_id_counts
-                ON artist.artist_id = artist_id_counts
+            FROM
+                artist
+            	INNER JOIN artist_id_counts counts
+                    ON artist.artist_id = counts.artist_id
             ORDER BY counts.artist_play_count DESC
+            LIMIT 5
             """
             result = session.exec(statement)
 
@@ -202,6 +204,7 @@ class SpotifyMetricsDB:
             FROM track_and_distinct_genre
             GROUP BY genre
             ORDER BY COUNT(*) DESC
+            LIMIT 5
             """
             result = session.exec(statement)
 

@@ -38,7 +38,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-password}
     ports:
-      - 18500:80
+      - ${PGADMIN_PORT}:80
     depends_on:
       - postgres
     networks:
