@@ -36,7 +36,11 @@ class SpotifyMetricsDB:
             statement = f"""
             WITH track_and_artist AS (
                 SELECT track.track_id, STRING_AGG(a.artist_name, ', ') as artist_names
-                FROM (SELECT * FROM playedtrack WHERE played_at >= '{after.strftime('%Y-%m-%d')}') track
+                FROM (
+                    SELECT distinct track_id, artist_ids
+                    FROM playedtrack 
+                    WHERE played_at >= '{after.strftime('%Y-%m-%d')}'
+                ) track
                 INNER JOIN artist a
                     ON a.artist_id = any(track.artist_ids)
                 GROUP BY track.track_id
@@ -44,7 +48,11 @@ class SpotifyMetricsDB:
 
             SELECT track.played_at, track.track_name, artists.artist_names
             FROM
-                (SELECT * FROM playedtrack WHERE played_at >= '{after.strftime('%Y-%m-%d')}') track
+                (
+                    SELECT * 
+                    FROM playedtrack 
+                    WHERE played_at >= '{after.strftime('%Y-%m-%d')}'
+                ) track
                 INNER JOIN track_and_artist artists
                 ON track.track_id = artists.track_id
             ORDER BY track.played_at DESC
@@ -61,7 +69,6 @@ class SpotifyMetricsDB:
             ]
         df = DataFrame(rows, columns=["Time played", "Track", "Artist(s)"])
         return df
-
 
     def read_track_ids(self, after: datetime) -> List[str]:
         """Reads the track ids for recently played songs from the transactional db
@@ -83,7 +90,6 @@ class SpotifyMetricsDB:
 
             track_ids = [item[0] for item in result]
         return track_ids
-
 
     def read_energy_score(self, after: datetime) -> float:
         """Reads the aggregate energy score from the track list from the transactional db
