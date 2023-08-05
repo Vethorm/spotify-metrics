@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from dash import Dash, dash_table, dcc, html
 from dash.dependencies import Input, Output
 from plotly.subplots import make_subplots
+import plotly.express as px
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from . import database
@@ -266,6 +267,23 @@ def update_view_window(value: int) -> str:
     return f"Viewing the last {value} day(s)!"
 
 
+@app.callback(
+    Output("listen-time-container", "children"),
+    [Input("interval-component", "n_intervals"), Input("history-length", "data")],
+)
+def update_listen_time(interval: int, history_length: int) -> dcc.Graph:
+    current_date = datetime.utcnow().date()
+    time_delta = timedelta(days=history_length - 1)
+    start_date = current_date - time_delta
+    df = spotify_db.read_listen_time_aggregation(start=start_date, end=current_date)
+
+    fig = px.bar(df, x="date", y="listen_time", labels={"date": "", "listen_time": ""})
+
+    graph = dcc.Graph(figure=fig)
+
+    return graph
+
+
 app.layout = html.Div(
     [
         dcc.Store(id="history-length", data=1),
@@ -292,6 +310,7 @@ app.layout = html.Div(
         ),
         html.Div(
             children=[
+                # Time slider
                 html.Div(
                     children=[
                         html.Div(
@@ -309,6 +328,7 @@ app.layout = html.Div(
                     ],
                     className="row",
                 ),
+                # Recently played
                 html.Div(
                     children=[
                         html.Div(
@@ -323,6 +343,22 @@ app.layout = html.Div(
                     ],
                     className="row",
                 ),
+                # Listen time
+                html.Div(
+                    children=[
+                        html.Div(
+                            children=[
+                                html.P("Listen time !", className="card-header"),
+                                html.Div(
+                                    id="listen-time-container", className="card-body"
+                                ),
+                            ],
+                            className="col-12 card",
+                        )
+                    ],
+                    className="row",
+                ),
+                # Pie charts for popularity/energy
                 html.Div(
                     children=[
                         html.Div(
@@ -332,6 +368,7 @@ app.layout = html.Div(
                     ],
                     className="row",
                 ),
+                # Top artist/genre
                 html.Div(
                     children=[
                         html.Div(
