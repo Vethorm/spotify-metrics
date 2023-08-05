@@ -217,3 +217,36 @@ class SpotifyMetricsDB:
             rows = [item[0] for item in result]
         df = DataFrame(rows, columns=["Genre"])
         return df
+
+    def read_listen_time_aggregation(self, start: datetime, end: datetime) -> DataFrame:
+        """Reads the total listen duration by date
+
+        Args:
+            start (datetime): inclusive start date to calculate
+            end (datetime): inclusive end date to calculate
+
+        Returns:
+            DataFrame: dataframe of 'date' and 'listen_time'
+        """
+        with Session(self.engine) as session:
+            statement = f"""
+            SELECT 
+                CAST(track.played_at AS DATE) as played_at,
+                SUM(feat.duration_ms) as total_duration
+            FROM (
+                    SELECT *
+                    FROM playedtrack
+                    WHERE CAST(played_at AS DATE) >= '{start.strftime('%Y-%m-%d')}' AND CAST(played_at AS DATE) <= '{end.strftime('%Y-%m-%d')}' 
+                ) track
+                INNER JOIN trackfeatures feat
+                ON track.track_id = feat.track_id
+            GROUP BY CAST(track.played_at AS DATE)
+            """
+            result = session.exec(statement)
+
+            rows = [
+                (item[0].strftime("%m/%d"), round(item[1] / (1000 * 60)))
+                for item in result
+            ]
+        pd = DataFrame(rows, columns=["date", "listen_time"])
+        return pd
