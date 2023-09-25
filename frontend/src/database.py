@@ -4,12 +4,7 @@ from typing import List
 
 from pandas import DataFrame
 
-from sqlmodel import create_engine, col, Session, select, func as F
-
-from .models.track import PlayedTrack
-from .models.artist import Artist
-
-from collections import namedtuple
+from sqlmodel import create_engine, Session
 
 import os
 
@@ -92,7 +87,8 @@ class SpotifyMetricsDB:
         return track_ids
 
     def read_energy_score(self, after: datetime) -> float:
-        """Reads the aggregate energy score from the track list from the transactional db
+        """Reads the aggregate energy score from the track list from the
+            transactional db
 
         Args:
             after (datetime): datetime in UTC to find the lower bound of dates to
@@ -172,11 +168,11 @@ class SpotifyMetricsDB:
             SELECT artist.artist_name
             FROM
                 artist
-            	INNER JOIN artist_id_counts counts
+                INNER JOIN artist_id_counts counts
                     ON artist.artist_id = counts.artist_id
             ORDER BY counts.artist_play_count DESC
             LIMIT 5
-            """
+            """ # noqa: E501
             result = session.exec(statement)
 
             rows = [item[0] for item in result]
@@ -211,7 +207,7 @@ class SpotifyMetricsDB:
             GROUP BY genre
             ORDER BY COUNT(*) DESC
             LIMIT 5
-            """
+            """ # noqa: E501
             result = session.exec(statement)
 
             rows = [item[0] for item in result]
@@ -236,12 +232,13 @@ class SpotifyMetricsDB:
             FROM (
                     SELECT *
                     FROM playedtrack
-                    WHERE CAST(played_at AS DATE) >= '{start.strftime('%Y-%m-%d')}' AND CAST(played_at AS DATE) <= '{end.strftime('%Y-%m-%d')}' 
+                    WHERE CAST(played_at AS DATE) >= '{start.strftime('%Y-%m-%d')}'
+                        AND CAST(played_at AS DATE) <= '{end.strftime('%Y-%m-%d')}' 
                 ) track
                 INNER JOIN trackfeatures feat
                 ON track.track_id = feat.track_id
             GROUP BY CAST(track.played_at AS DATE)
-            """
+            """ # noqa: E501
             result = session.exec(statement)
 
             rows = [
