@@ -5,7 +5,7 @@ from dash import Dash, dcc, html
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 
-from . import callbacks # noqa: F401
+from . import callbacks  # noqa: F401
 
 external_stylesheets = [
     {
@@ -67,81 +67,125 @@ app.layout = html.Div(
                 html.Div(
                     children=[
                         html.Div(
+                            id='time-selector',
                             children=[
                                 html.P(
                                     id="view-window",
                                     className="content-header",
                                 ),
-                                dcc.Slider(
-                                    1, 7, 1, value=1, marks=None, id="time-slider"
+                                dcc.RadioItems(
+                                    options=[7, 14, 30],
+                                    value=7,
+                                    inline=True,
+                                    id="time-dropdown",
+                                    inputStyle={'padding-right' : '5px'},
+                                    labelStyle={'padding-right' : '5px'},
                                 ),
                             ],
-                            className="day-slider col-11 card",
+                            className="card",
                         )
                     ],
-                    className="row",
+                    className="flex-row",
                 ),
-                # Listen time
                 html.Div(
+                    id="charts",
                     children=[
+                        # listen/popularity
                         html.Div(
                             children=[
-                                html.P("Listen time !", className="card-header"),
                                 html.Div(
-                                    id="listen-time-container", className="card-body"
+                                    children=[
+                                        html.P(
+                                            "Listen time !", className="card-header"
+                                        ),
+                                        html.Div(
+                                            id="listen-time-container",
+                                            className="card-body",
+                                        ),
+                                    ],
+                                    className="card col-6 flex-column bar-chart",
+                                ),
+                                html.Div(
+                                    children=[
+                                        html.P(
+                                            "Average song popularity by day !",
+                                            className="card-header",
+                                        ),
+                                        html.Div(
+                                            id="popularity-container",
+                                            className="card-body",
+                                        ),
+                                    ],
+                                    className="card col-6 flex-column bar-chart",
                                 ),
                             ],
-                            className="col-12 card",
-                        )
-                    ],
-                    className="row",
-                ),
-                # Recently played
-                html.Div(
-                    children=[
+                            className="flex-row",
+                        ),
+                        # energy/danceability
                         html.Div(
                             children=[
-                                html.P(
-                                    "Recently played tracks !", className="card-header"
+                                html.Div(
+                                    children=[
+                                        html.P(
+                                            "Average song energy by day !",
+                                            className="card-header",
+                                        ),
+                                        html.Div(
+                                            id="energy-container", className="card-body"
+                                        ),
+                                    ],
+                                    className="card col-6 flex-column bar-chart",
                                 ),
-                                html.Div(id="recently-listened", className="card-body"),
+                                html.Div(
+                                    children=[
+                                        html.P(
+                                            "Average song danceability by day !",
+                                            className="card-header",
+                                        ),
+                                        html.Div(
+                                            id="danceability-container",
+                                            className="card-body",
+                                        ),
+                                    ],
+                                    className="card col-6 flex-column bar-chart",
+                                ),
                             ],
-                            className="col-12 card",
+                            className="flex-row",
                         ),
                     ],
-                    className="row",
                 ),
-                # Pie charts for popularity/energy
                 html.Div(
+                    id="top-lists",
                     children=[
+                        # Top artist/genre
                         html.Div(
-                            id="pie-charts",
-                            className="col-12 card",
+                            children=[
+                                html.Div(
+                                    id="top-artists-card",
+                                    children=[
+                                        html.P(
+                                            "Top Artists !", className="card-header"
+                                        ),
+                                        html.Div(
+                                            id="top-artists", className="card-body"
+                                        ),
+                                    ],
+                                    className="card col-6 flex-column",
+                                ),
+                                html.Div(
+                                    id="top-genres-card",
+                                    children=[
+                                        html.P("Top Genres !", className="card-header"),
+                                        html.Div(
+                                            id="top-genres", className="card-body"
+                                        ),
+                                    ],
+                                    className="card col-6 flex-column",
+                                ),
+                            ],
+                            className="flex-row",
                         ),
                     ],
-                    className="row",
-                ),
-                # Top artist/genre
-                html.Div(
-                    children=[
-                        html.Div(
-                            id="top-artists-card",
-                            children=[
-                                html.P("Top Artists !", className="card-header"),
-                                html.Div(id="top-artists", className="card-body"),
-                            ],
-                            className="col-5 card",
-                        ),
-                        html.Div(
-                            id="top-genres-card",
-                            children=[
-                                html.P("Top Genres !", className="card-header"),
-                                html.Div(id="top-genres", className="card-body"),
-                            ],
-                            className="col-5 card",
-                        ),
-                    ],
-                    className="row",
                 ),
             ],
             className="wrapper",

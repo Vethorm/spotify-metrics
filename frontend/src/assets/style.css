@@ -50,7 +50,7 @@ body {
 .wrapper {
     margin-right: auto;
     margin-left: auto;
-    max-width: 1024px;
+    max-width: 1280px;
     padding-right: 10px;
     padding-left: 10px;
     margin-top: 32px;
@@ -81,12 +81,8 @@ body {
     word-break: normal;
 }
 
-#top-artists-card {
-    margin-right: 12px;
-}
-
-#top-genres-card {
-    margin-left: 12px;
+#time-selector {
+    padding: 6px;
 }
 
 .pies {
@@ -105,13 +101,6 @@ body {
     width: 100%;
 }
 
-.col-11 {
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-    width: 90%;
-}
-
 .col-8 {
     flex-grow: 0;
     flex-shrink: 0;
@@ -126,13 +115,6 @@ body {
     width: 50%;
 }
 
-.col-5 {
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-    width: 48%;
-}
-
 .col-4 {
     flex-grow: 0;
     flex-shrink: 0;
@@ -140,13 +122,25 @@ body {
     width: 33.33%;
 }
 
-.row {
-    --bs-gutter-x: 1.625rem;
-    --bs-gutter-y: 0;
+.bar-chart {
+    height: 280px;
+}
+
+.flex-row {
     display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
-    margin-top: calc(-1*var(--bs-gutter-y));
-    margin-left: calc(-0.5*var(--bs-gutter-x));
-    margin-right: calc(-0.5*var(--bs-gutter-x));
-    justify-content: center;
+    width: 100%;
+    gap: 10px;
+}
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 100%;
+    flex: 1;
+}
+
+.slimMargin {
+    margin: 12px;
 }
