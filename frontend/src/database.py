@@ -6,6 +6,8 @@ from pandas import DataFrame
 
 from sqlmodel import create_engine, Session
 
+from sqlalchemy.sql import text
+
 import os
 
 logger = logging.getLogger("dash.dash")
@@ -52,7 +54,7 @@ class SpotifyMetricsDB:
                 ON track.track_id = artists.track_id
             ORDER BY track.played_at DESC
             """
-            result = session.exec(statement)
+            result = session.exec(text(statement))
 
             rows = [
                 [
@@ -81,7 +83,7 @@ class SpotifyMetricsDB:
             FROM playedtrack
             WHERE played_at >= '{after.strftime('%Y-%m-%d')}'
             """
-            result = session.exec(statement)
+            result = session.exec(text(statement))
 
             track_ids = [item[0] for item in result]
         return track_ids
@@ -110,7 +112,7 @@ class SpotifyMetricsDB:
                 INNER JOIN trackfeatures feat
                 ON ids.track_id = feat.track_id
             """
-            result = session.exec(statement)
+            result = session.exec(text(statement))
 
             for item in result:
                 energy_score = item[0] * 100
@@ -139,7 +141,7 @@ class SpotifyMetricsDB:
                 INNER JOIN track tracks
                 ON ids.track_id = tracks.track_id
             """
-            result = session.exec(statement)
+            result = session.exec(text(statement))
 
             for item in result:
                 popularity_score = item[0]
@@ -172,8 +174,8 @@ class SpotifyMetricsDB:
                     ON artist.artist_id = counts.artist_id
             ORDER BY counts.artist_play_count DESC
             LIMIT 5
-            """ # noqa: E501
-            result = session.exec(statement)
+            """  # noqa: E501
+            result = session.exec(text(statement))
 
             rows = [item[0] for item in result]
         df = DataFrame(rows, columns=["Artist"])
@@ -207,8 +209,8 @@ class SpotifyMetricsDB:
             GROUP BY genre
             ORDER BY COUNT(*) DESC
             LIMIT 5
-            """ # noqa: E501
-            result = session.exec(statement)
+            """  # noqa: E501
+            result = session.exec(text(statement))
 
             rows = [item[0] for item in result]
         df = DataFrame(rows, columns=["Genre"])
@@ -238,8 +240,8 @@ class SpotifyMetricsDB:
                 INNER JOIN trackfeatures feat
                 ON track.track_id = feat.track_id
             GROUP BY CAST(track.played_at AS DATE)
-            """ # noqa: E501
-            result = session.exec(statement)
+            """  # noqa: E501
+            result = session.exec(text(statement))
 
             rows = [
                 (item[0].strftime("%m/%d"), round(item[1] / (1000 * 60)))
@@ -247,3 +249,98 @@ class SpotifyMetricsDB:
             ]
         pd = DataFrame(rows, columns=["date", "listen_time"])
         return pd
+
+    def read_popularity_aggregation(self, start: datetime, end: datetime) -> DataFrame:
+        """_summary_
+
+        Args:
+            start (datetime): _description_
+            end (datetime): _description_
+
+        Returns:
+            DataFrame: _description_
+        """
+        with Session(self.engine) as session:
+            statement = f"""
+            SELECT
+                CAST(played.played_at AS DATE) as played_at,
+                ROUND(AVG(track.popularity), 0) as avg_popularity
+            FROM (
+                    SELECT *
+                    FROM playedtrack
+                    WHERE CAST(played_at AS DATE) >= '{start.strftime('%Y-%m-%d')}'
+                            AND CAST(played_at AS DATE) <= '{end.strftime('%Y-%m-%d')}'
+                ) played
+                INNER JOIN track
+                ON played.track_id = track.track_id
+            GROUP BY CAST(played.played_at AS DATE)
+            """
+            result = session.exec(text(statement))
+
+            rows = [(item[0].strftime("%m/%d"), item[1]) for item in result]
+        df = DataFrame(rows, columns=["date", "popularity"])
+        return df
+
+    def read_energy_aggregation(self, start: datetime, end: datetime) -> DataFrame:
+        """_summary_
+
+        Args:
+            start (datetime): _description_
+            end (datetime): _description_
+
+        Returns:
+            DataFrame: _description_
+        """
+        with Session(self.engine) as session:
+            statement = f"""
+            SELECT 
+                CAST(track.played_at AS DATE) as played_at,
+                ROUND(AVG(feat.energy::numeric) * 100, 0) as avg_energy
+            FROM (
+                    SELECT *
+                    FROM playedtrack
+                    WHERE CAST(played_at AS DATE) >= '{start.strftime('%Y-%m-%d')}'
+                        AND CAST(played_at AS DATE) <= '{end.strftime('%Y-%m-%d')}' 
+                ) track
+                INNER JOIN trackfeatures feat
+                ON track.track_id = feat.track_id
+            GROUP BY CAST(track.played_at AS DATE)
+            """
+            result = session.exec(text(statement))
+
+            rows = [(item[0].strftime("%m/%d"), item[1]) for item in result]
+        df = DataFrame(rows, columns=["date", "energy"])
+        return df
+
+    def read_danceability_aggregation(
+        self, start: datetime, end: datetime
+    ) -> DataFrame:
+        """_summary_
+
+        Args:
+            start (datetime): _description_
+            end (datetime): _description_
+
+        Returns:
+            DataFrame: _description_
+        """
+        with Session(self.engine) as session:
+            statement = f"""
+            SELECT 
+                CAST(track.played_at AS DATE) as played_at,
+                ROUND(AVG(feat.danceability::numeric) * 100, 0) as avg_energy
+            FROM (
+                    SELECT *
+                    FROM playedtrack
+                    WHERE CAST(played_at AS DATE) >= '{start.strftime('%Y-%m-%d')}'
+                        AND CAST(played_at AS DATE) <= '{end.strftime('%Y-%m-%d')}' 
+                ) track
+                INNER JOIN trackfeatures feat
+                ON track.track_id = feat.track_id
+            GROUP BY CAST(track.played_at AS DATE)
+            """
+            result = session.exec(text(statement))
+
+            rows = [(item[0].strftime("%m/%d"), item[1]) for item in result]
+        df = DataFrame(rows, columns=["date", "danceability"])
+        return df

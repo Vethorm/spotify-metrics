@@ -210,10 +210,10 @@ def update_pies(interval_count: int, history_length: int):
     return [dcc.Graph(id="pies", figure=fig, className="pies")]
 
 
-@callback(Output("history-length", "data"), Input("time-slider", "value"))
+@callback(Output("history-length", "data"), Input("time-dropdown", "value"))
 def update_history_length(value: int) -> int:
     """Updates the history length value stored on the frontend when the
-        time-slider changes
+        time-dropdown changes
 
     Args:
         value (int): the current history length in days
@@ -225,10 +225,10 @@ def update_history_length(value: int) -> int:
     return value
 
 
-@callback(Output("view-window", "children"), Input("time-slider", "value"))
+@callback(Output("view-window", "children"), Input("time-dropdown", "value"))
 def update_view_window(value: int) -> str:
     """Updates the text about history length on the frontend when the
-        time-slider changes
+        time-dropdown changes
 
     Args:
         value (int): the current history length in days
@@ -250,8 +250,136 @@ def update_listen_time(interval: int, history_length: int) -> dcc.Graph:
     start_date = current_date - time_delta
     df = spotify_db.read_listen_time_aggregation(start=start_date, end=current_date)
 
-    fig = px.bar(df, x="date", y="listen_time", labels={"date": "", "listen_time": ""})
+    max_listen_time = df["listen_time"].max()
 
-    graph = dcc.Graph(figure=fig)
+    fig = px.bar(
+        df,
+        x="date",
+        y="listen_time",
+        labels={"date": "Date", "listen_time": "Listen time (min)"},
+        text="listen_time",
+    )
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0),
+        yaxis_range=[0, max_listen_time + int((max_listen_time * 0.20))],
+    )
+    fig.update_traces(
+        hoverinfo="skip",
+        hovertemplate=None,
+        textposition="outside",
+    )
+
+    graph = dcc.Graph(
+        figure=fig,
+        style={"height": "100%"},
+        config={
+            "autosizeable": True,
+            "displayModeBar": False,
+            "displaylogo": False,
+            "staticPlot": True,
+        },
+    )
+
+    return graph
+
+
+@callback(
+    Output("popularity-container", "children"),
+    [Input("interval-component", "n_intervals"), Input("history-length", "data")],
+)
+def update_avg_popularity(interval: int, history_length: int) -> dcc.Graph:
+    current_date = datetime.utcnow().date()
+    time_delta = timedelta(days=history_length - 1)
+    start_date = current_date - time_delta
+    df = spotify_db.read_popularity_aggregation(start=start_date, end=current_date)
+
+    fig = px.bar(
+        df,
+        x="date",
+        y="popularity",
+        labels={"date": "Date", "popularity": "Average popularity"},
+        text="popularity",
+    )
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0), yaxis_range=[0, 100], yaxis=dict(dtick=25)
+    )
+    fig.update_traces(
+        hoverinfo="skip",
+        hovertemplate=None,
+        textposition="outside",
+    )
+
+    graph = dcc.Graph(
+        figure=fig,
+        style={"height": "100%"},
+        config={"displayModeBar": False, "displaylogo": False, "staticPlot": True},
+    )
+
+    return graph
+
+
+@callback(
+    Output("energy-container", "children"),
+    [Input("interval-component", "n_intervals"), Input("history-length", "data")],
+)
+def update_avg_energy(interval: int, history_length: int) -> dcc.Graph:
+    current_date = datetime.utcnow().date()
+    time_delta = timedelta(days=history_length - 1)
+    start_date = current_date - time_delta
+    df = spotify_db.read_energy_aggregation(start=start_date, end=current_date)
+
+    fig = px.bar(
+        df,
+        x="date",
+        y="energy",
+        labels={"date": "Date", "energy": "Average energy"},
+        text="energy",
+    )
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0), yaxis_range=[0, 100], yaxis=dict(dtick=25)
+    )
+    fig.update_traces(
+        hoverinfo="skip",
+        hovertemplate=None,
+        textposition="outside",
+    )
+
+    graph = dcc.Graph(
+        figure=fig,
+        style={"height": "100%"},
+        config={"displayModeBar": False, "displaylogo": False, "staticPlot": True},
+    )
+
+    return graph
+
+
+@callback(
+    Output("danceability-container", "children"),
+    [Input("interval-component", "n_intervals"), Input("history-length", "data")],
+)
+def update_avg_danceability(interval: int, history_length: int) -> dcc.Graph:
+    current_date = datetime.utcnow().date()
+    time_delta = timedelta(days=history_length - 1)
+    start_date = current_date - time_delta
+    df = spotify_db.read_danceability_aggregation(start=start_date, end=current_date)
+
+    fig = px.bar(
+        df,
+        x="date",
+        y="danceability",
+        labels={"date": "Date", "danceability": "Average danceability"},
+        text="danceability",
+        # color='rgb(54,69,79)'
+    )
+    fig.update_layout(
+        margin=dict(l=0, r=0, t=0, b=0), yaxis_range=[0, 100], yaxis=dict(dtick=25)
+    )
+    fig.update_traces(hoverinfo="skip", hovertemplate=None, textposition="outside")
+
+    graph = dcc.Graph(
+        figure=fig,
+        style={"height": "100%"},
+        config={"displayModeBar": False, "displaylogo": False, "staticPlot": True},
+    )
 
     return graph
