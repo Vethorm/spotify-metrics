@@ -10,7 +10,11 @@ from tekore.model import AudioFeatures, FullArtist, PlayHistoryPaging
 from spotify_scraper.database import SpotifyMetricsDB
 from spotify_scraper.models.track import Track, TrackFeatures
 from spotify_scraper.models.artist import Artist
-from .logger import logger
+from loguru import logger
+
+from typer import Typer
+
+app = Typer()
 
 
 class SpotifyScraper:
@@ -174,7 +178,7 @@ class SpotifyScraper:
             for track in tracks
         ]
 
-
+@app.command()
 def get_new_token(client_id, client_secret, redirect_uri) -> None:
     """Prints a new refresh token for a user
 
@@ -190,6 +194,7 @@ def get_new_token(client_id, client_secret, redirect_uri) -> None:
     print("Refresh token\n", refresh_token.refresh_token)
 
 
+@app.command()
 def refresh_token(client_id, client_secret) -> str:
     """Refreshes a spotify token and initializes a new Spotify client
 
@@ -207,6 +212,7 @@ def refresh_token(client_id, client_secret) -> str:
     return refreshing_token.access_token
 
 
+@app.command()
 def refresh_data() -> None:
     """Run the script to scrape data from the spotify API for recently played
     history metrics
@@ -257,3 +263,7 @@ def refresh_data() -> None:
 
         logger.info(f"Sleeping for {60 * minutes}")
         time.sleep(60 * minutes)
+
+
+def cli():
+    app()
