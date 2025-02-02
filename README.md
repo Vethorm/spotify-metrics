@@ -1,5 +1,9 @@
 # spotify-metrics
 
+**Discontinued**: [Spotify cut significant API access to third party apps](https://www.androidpolice.com/spotify-new-api-terms-third-party-apps/)
+
+---
+
 This is a personal project that lets me scrape and visualize my recently played songs on Spotify along with some metrics about the listen history.
 
 Some of the technologies used
